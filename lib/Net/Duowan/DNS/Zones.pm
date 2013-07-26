@@ -8,7 +8,7 @@ use JSON;
 use base 'Net::Duowan::DNS::Common';
 
 use vars qw/$VERSION/;
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 sub new {
     my $class = shift;
@@ -23,9 +23,9 @@ sub fetch {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'zone_load_multi';
-    my $args = "a=$act&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub check {
@@ -40,9 +40,9 @@ sub check {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'zone_check';
-    my $args = "a=$act&psp=$psp&tkn=$token&zones=$zones";
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token, zones=>$zones);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub create {
@@ -52,9 +52,9 @@ sub create {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'zone_new';
-    my $args = "a=$act&psp=$psp&tkn=$token&z=$zone";
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token, z=>$zone);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub remove {
@@ -64,9 +64,9 @@ sub remove {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'zone_delete';
-    my $args = "a=$act&psp=$psp&tkn=$token&z=$zone";
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token, z=>$zone);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 1;

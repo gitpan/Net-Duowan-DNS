@@ -5,10 +5,11 @@ use warnings;
 use strict;
 use Carp qw/croak/;
 use JSON;
+use HTTP::Request::Common qw(POST);
 use LWP::UserAgent;
 
 use vars qw/$VERSION/;
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 sub new {
     my $class = shift;
@@ -17,18 +18,16 @@ sub new {
 
 sub reqTemplate {
     my $self = shift;
-    my $args = shift;
+    my %args = @_;
 
     my $url = 'https://cloudns.duowan.com/api/';
     my $ua = LWP::UserAgent->new;
     $ua->timeout(30);
     $ua->ssl_opts(verify_hostname => 0);
 
-    my $req = HTTP::Request->new(POST => $url);
-    $req->content_type('application/x-www-form-urlencoded');
-    $req->content($args);
-
+    my $req = POST $url, [ %args ];
     my $res = $ua->request($req);
+
     if ($res->is_success ) {
         return decode_json($res->decoded_content);
     } else {

@@ -8,7 +8,7 @@ use JSON;
 use base 'Net::Duowan::DNS::Common';
 
 use vars qw/$VERSION/;
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 sub new {
     my $class = shift;
@@ -24,9 +24,9 @@ sub fetchSize {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load_size';
-    my $args = "a=$act&psp=$psp&tkn=$token&z=$zone";
+    my %reqs = (a=>$act,psp=>$psp, tkn=>$token, z=>$zone);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub fetchMulti {
@@ -39,9 +39,9 @@ sub fetchMulti {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load_all';
-    my $args = "a=$act&psp=$psp&tkn=$token&z=$zone&offset=$offset&number=$number";
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token, z=>$zone, offset=>$offset, number=>$number);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub fetchOne {
@@ -53,9 +53,9 @@ sub fetchOne {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load';
-    my $args = "a=$act&z=$zone&rid=$rid&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, rid=>$rid, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub create {
@@ -63,7 +63,7 @@ sub create {
     my $zone = shift || croak "no zone provided";
 
     my %args = @_;
-    my $name = $args{name} || croak "no record name provided";
+    my $name = $args{name} || "";
     my $type = $args{type} || croak "no record type provided";
     my $content = $args{content} || croak "no record content provided";
     my $isp = $args{isp} || croak "no ISP provided";
@@ -72,9 +72,10 @@ sub create {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_new';
-    my $args = "a=$act&z=$zone&name=$name&type=$type&content=$content&isp=$isp&ttl=$ttl&prio=$prio&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, name=>$name, type=>$type, content=>$content, 
+                isp=>$isp, ttl=>$ttl, prio=>$prio, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub modify {
@@ -83,7 +84,7 @@ sub modify {
 
     my %args = @_;
     my $rid = $args{rid} || croak "no rid provided";
-    my $name = $args{name} || croak "no record name provided";
+    my $name = $args{name} || "";
     my $type = $args{type} || croak "no record type provided";
     my $content = $args{content} || croak "no record content provided";
     my $isp = $args{isp} || croak "no ISP provided";
@@ -92,9 +93,10 @@ sub modify {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_edit';
-    my $args = "a=$act&z=$zone&rid=$rid&name=$name&type=$type&content=$content&isp=$isp&ttl=$ttl&prio=$prio&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, rid=>$rid, name=>$name, type=>$type, content=>$content, 
+                isp=>$isp, ttl=>$ttl, prio=>$prio, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub remove {
@@ -106,9 +108,9 @@ sub remove {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_delete';
-    my $args = "a=$act&z=$zone&rid=$rid&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, rid=>$rid, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub bulkCreate {
@@ -126,9 +128,9 @@ sub bulkCreate {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'bulk_rec_new';
-    my $args = "a=$act&z=$zone&records=$records&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, records=>$records, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub bulkRemove {
@@ -144,9 +146,9 @@ sub bulkRemove {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'bulk_rec_delete';
-    my $args = "a=$act&z=$zone&rids=$rids&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, rids=>$rids, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub removebyHost {
@@ -154,13 +156,13 @@ sub removebyHost {
     my $zone = shift || croak "no zone provided";
 
     my %args = @_;
-    my $name = $args{name} || croak "no record name provided";
+    my $name = $args{name} || "";
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_delete_by_name';
-    my $args = "a=$act&z=$zone&name=$name&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, name=>$name, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub search {
@@ -172,9 +174,9 @@ sub search {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_search';
-    my $args = "a=$act&z=$zone&k=$key&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, k=>$key, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub fetchbyHost {
@@ -182,13 +184,13 @@ sub fetchbyHost {
     my $zone = shift || croak "no zone provided";
 
     my %args = @_;
-    my $name = $args{name} || croak "no record name provided";
+    my $name = $args{name} || "";
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load_by_name';
-    my $args = "a=$act&z=$zone&name=$name&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, name=>$name, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 sub fetchbyPrefix {
@@ -200,9 +202,9 @@ sub fetchbyPrefix {
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load_by_prefix';
-    my $args = "a=$act&z=$zone&name=$prefix&psp=$psp&tkn=$token";
+    my %reqs = (a=>$act, z=>$zone, name=>$prefix, psp=>$psp, tkn=>$token);
 
-    return $self->reqTemplate($args);
+    return $self->reqTemplate(%reqs);
 }
 
 1;

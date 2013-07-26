@@ -9,7 +9,7 @@ use Net::Duowan::DNS::Zones;
 use Net::Duowan::DNS::Records;
 
 use vars qw/$VERSION/;
-$VERSION = '1.0';
+$VERSION = '1.1';
 
 sub new {
     my $class = shift;
@@ -44,7 +44,7 @@ Net::Duowan::DNS - Perl client for Duowan.com's DNS API
 
 =head1 VERSION
 
-Version 1.0
+Version 1.1
 
 =head1 SYNOPSIS
 
