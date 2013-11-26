@@ -7,9 +7,10 @@ use Carp qw/croak/;
 use LWP::UserAgent;
 use Net::Duowan::DNS::Zones;
 use Net::Duowan::DNS::Records;
+use Net::Duowan::DNS::Owner;
 
 use vars qw/$VERSION/;
-$VERSION = '1.1';
+$VERSION = '1.2.0';
 
 sub new {
     my $class = shift;
@@ -33,18 +34,22 @@ sub zones {
 sub records {
     my $self = shift;
     return Net::Duowan::DNS::Records->new($self->{psp},$self->{token} );
+}
 
+sub owner {
+    my $self = shift;
+    return Net::Duowan::DNS::Owner->new($self->{psp},$self->{token} );
 }
 
 1;
 
 =head1 NAME
 
-Net::Duowan::DNS - Perl client for Duowan.com's DNS API
+Net::Duowan::DNS - Perl client for YY ClouDNS API
 
 =head1 VERSION
 
-Version 1.1
+Version 1.2.0
 
 =head1 SYNOPSIS
 
@@ -53,6 +58,9 @@ Version 1.1
     my $dwdns = Net::Duowan::DNS->new(passport => 'YY_Passport', 
                                       token => 'Token_to_verify');
 
+    # the object for the owner
+    my $o = $dwdns->owner;
+
     # the object for zones management
     my $z = $dwdns->zones;
 
@@ -60,53 +68,83 @@ Version 1.1
     my $r = $dwdns->records;
 
     ##########################
+    # owner operation methods
+    ###########################
+    
+    # re-generate the token, the new token is included in the returned hashref
+    $re = $o->reGenerateToken;
+
+    # fetch the operation logs, the default offset and number are 0 and 100
+    # the log items are utf-8 encoded, you may want to encode_utf8(item) before printing them
+    $re = $o->fetchOpsLog(number=>10,offset=>0);
+
+    # fetch the history for zone applying, the default offset and number are 0 and 100
+    $re = $o->fetchZoneApplyHistory(number=>10,offset=>0);
+
+    ##########################
     # zones management methods
     ###########################
     
-    # fetch zones
+    # fetch all zones under an user
+    # you can also use offset and number to limit the returned items
     $re = $z->fetch;
 
-    # check zones
+    # check the information for special zones
     $re = $z->check('zone1.com','zone2.com');
 
     # create a zone
-    $re = $z->create('zone3.com');
+    # for both zone create and remove, you should be able to notice from the returned message that,
+    # they don't become effective at once, but wait for the administrator to approve them
+    # about zone status:
+    # 0 - prepare to be activated
+    # 1 - activated
+    # 2 - prepare to be deleted
+    $re = $z->create('zone.com');
 
     # remove a zone
-    $re = $z->remove('zone3.com');
+    $re = $z->remove('zone.com');
 
     ##########################
     # records management methods
     ###########################
 
-    # fetch records' size in a zone
-    $re = $r->fetchSize('zone1.com');
+    # fetch the records from a zone, the default offset and number are 0 and 100
+    # you may specify offset=>0, number=>-1 to get all the records for this zone
+    $re = $r->fetchMulti('zone.com',offset=>0,number=>10);
 
-    # fetch a record
-    $r->fetchOne('zone1.com',rid=>123);
+    # fetch records' size within a zone
+    $re = $r->fetchSize('zone.com');
 
-    # fetch all records from a zone
-    $re = $r->fetchMulti('zone1.com');
-
-    # fetch the specified range of records
-    $re = $r->fetchMulti('zone1.com',offset=>0,number=>10);
-
-    # fetch records by hostname
-    $re = $r->fetchbyHost('zone1.com',name=>'www');
-
-    # fetch records by matching host's prefix
-    $re = $r->fetchbyPrefix('zone1.com',prefix=>'test*');
+    # fetch a record, you should specify the record id
+    # the record's options are included in the returned hashref
+    $r->fetchOne('zone.com',rid=>123);
 
     # create a record
-    $re = $r->create('zone1.com',name=>'www',content=>'11.22.33.44',isp=>'tel',type=>'A');
+    # name - the hostname for a record
+    # content - the record value
+    # isp - with either tel or uni from China ISP
+    # type - A, CNAME, MX, TXT, NS, AAAA
+    # ttl - time to live, in seconds
+    # about the record status:
+    # 0 - prepare to be activated
+    # 1 - activated
+    # 2 - prepare to be deleted
+    $re = $r->create('zone.com',name=>'www',content=>'11.22.33.44',isp=>'tel',type=>'A',ttl=>300);
 
-    # modify a record
-    $re = $r->modify('zone1.com',rid=>123,name=>'www',content=>'5.6.7.8',isp=>'uni',type=>'A');
+    # modify a record, you must specify the rid to be modified
+    $re = $r->modify('zone.com',rid=>123,name=>'www',content=>'5.6.7.8',isp=>'uni',type=>'A',ttl=>300);
 
-    # remove a record
-    $re = $r->remove('zone1.com',rid=>123);
+    # remove a record, you must specify the rid to be removed
+    $re = $r->remove('zone.com',rid=>123);
 
-    # bulk create records
+    # bulk remove records, all records included in the rids list are removed
+    $re = $r->bulkRemove('zone.com',rids=>[123,456]);
+
+    # remove records by hostname
+    $re = $r->removebyHost('zone.com',name=>'www');
+
+    # bulk create records, the value for records is a list
+    # each element in the list must be the record options
     my $rec =
         [ { type => "A",
             name => "test1",
@@ -122,22 +160,30 @@ Version 1.1
           }
         ];
 
-    $re = $r->bulkCreate('zone1.com',records=>$rec);
+    $re = $r->bulkCreate('zone.com',records=>$rec);
 
-    # bulk remove records
-    $re = $r->bulkRemove('zone1.com',rids=>[123,456]);
+    # search records with the keyword
+    # it will search from the name and content fields with the keyword
+    # you can also use offset,number to limit the returned items
+    $r->search('zone.com',keyword=>'test');
 
-    # remove records by hostname
-    $re = $r->removebyHost('zone1.com',name=>'www');
+    # fetch records by hostname
+    # all records with the specified hostname will be included in the hashref
+    # you can also use offset,number to limit the returned items
+    $re = $r->fetchbyHost('zone.com',name=>'www');
 
-    # search records
-    $r->search('zone1.com',keyword=>'test1');
+    # fetch records by wild matching within the hostname string
+    # the example below gets the records of test1.zone.com, test2.zone.com, ...
+    $re = $r->fetchbyPrefix('zone.com',prefix=>'test*');
 
     ##########################
     # print out the results
     ###########################
     
-    # all results returned are hash reference, just dump it
+    # the result returned is a hash reference, just dump it
+    # you should get the wanted data from the hashref
+    # in the future version I may decode the hashref, return all options as methods
+    # but in the current release you should be able to parse the hash by your end
     use Data::Dumper;
     print Dumper $re;
 
@@ -150,19 +196,23 @@ The class method for initializing the object.
 
 To use the API, you firstly should sign up an account on YY.com, that's your passport.
 
-The token is obtained from Duowan DNS's user management panel.
+The token is obtained from YY ClouDNS's user management panel.
 
-For more details please check the API document:
+For more details please check the API document from their official website:
 
-    http://www.nsbeta.info/doc/YY-DNS-API.pdf
+    http://dnscp.duowan.com/
+
+=head2 owner()
+
+Got an object for the owner, who has several methods for the user management
 
 =head2 zones()
 
-By calling this instance method, you get an object which has all methods for zones management.
+Got an object which has all methods for zones management
 
 =head2 records()
 
-Similiar to the previous method, it gets all methods for records management.
+Got an object which has all methods for records management
 
 =head1 AUTHOR
 

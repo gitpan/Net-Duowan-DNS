@@ -8,7 +8,7 @@ use JSON;
 use base 'Net::Duowan::DNS::Common';
 
 use vars qw/$VERSION/;
-$VERSION = '1.1';
+$VERSION = '1.2.0';
 
 sub new {
     my $class = shift;
@@ -22,8 +22,13 @@ sub fetch {
 
     my $psp = $self->{psp};
     my $token = $self->{token};
+
+    my %args = @_;
+    my $offset = $args{offset} || 0;
+    my $number = $args{number} || -1;
+
     my $act = 'zone_load_multi';
-    my %reqs = (a=>$act, psp=>$psp, tkn=>$token);
+    my %reqs = (a=>$act, psp=>$psp, tkn=>$token, offset=>$offset, number=>$number);
 
     return $self->reqTemplate(%reqs);
 }

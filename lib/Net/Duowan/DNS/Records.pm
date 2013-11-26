@@ -8,7 +8,7 @@ use JSON;
 use base 'Net::Duowan::DNS::Common';
 
 use vars qw/$VERSION/;
-$VERSION = '1.1';
+$VERSION = '1.2.0';
 
 sub new {
     my $class = shift;
@@ -35,7 +35,7 @@ sub fetchMulti {
 
     my %args = @_;
     my $offset = $args{offset} || 0;
-    my $number = $args{number} || -1;
+    my $number = $args{number} || 100;
     my $psp = $self->{psp};
     my $token = $self->{token};
     my $act = 'rec_load_all';
@@ -123,7 +123,7 @@ sub bulkCreate {
     unless (ref $records) {
         croak "records must be an array reference";
     }
-    $records = encode_json($records);
+    $records = to_json($records);
 
     my $psp = $self->{psp};
     my $token = $self->{token};
@@ -173,8 +173,10 @@ sub search {
     my $key = $args{keyword} || croak "no keyword provided";
     my $psp = $self->{psp};
     my $token = $self->{token};
+    my $offset = $args{offset} || 0;
+    my $number = $args{number} || -1;
     my $act = 'rec_search';
-    my %reqs = (a=>$act, z=>$zone, k=>$key, psp=>$psp, tkn=>$token);
+    my %reqs = (a=>$act, z=>$zone, k=>$key, psp=>$psp, tkn=>$token, offset=>$offset, number=>$number);
 
     return $self->reqTemplate(%reqs);
 }
@@ -187,8 +189,10 @@ sub fetchbyHost {
     my $name = $args{name} || "";
     my $psp = $self->{psp};
     my $token = $self->{token};
+    my $offset = $args{offset} || 0;
+    my $number = $args{number} || -1;
     my $act = 'rec_load_by_name';
-    my %reqs = (a=>$act, z=>$zone, name=>$name, psp=>$psp, tkn=>$token);
+    my %reqs = (a=>$act, z=>$zone, name=>$name, psp=>$psp, tkn=>$token, offset=>$offset, number=>$number);
 
     return $self->reqTemplate(%reqs);
 }
@@ -201,8 +205,10 @@ sub fetchbyPrefix {
     my $prefix = $args{prefix} || croak "no record prefix provided";
     my $psp = $self->{psp};
     my $token = $self->{token};
+    my $offset = $args{offset} || 0;
+    my $number = $args{number} || -1;
     my $act = 'rec_load_by_prefix';
-    my %reqs = (a=>$act, z=>$zone, name=>$prefix, psp=>$psp, tkn=>$token);
+    my %reqs = (a=>$act, z=>$zone, name=>$prefix, psp=>$psp, tkn=>$token, offset=>$offset, number=>$number);
 
     return $self->reqTemplate(%reqs);
 }
